@@ -9,42 +9,47 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.LinkedList;
  
 @RunWith(Parallelized.class)
-public class JUnitConcurrentTodo {
+public class JUnitConcurrentTest {
     String username = System.getenv("LT_USERNAME") == null ? "Your LT Username" : System.getenv("LT_USERNAME");
     String accessKey = System.getenv("LT_ACCESS_KEY") == null ? "Your LT AccessKey" : System.getenv("LT_ACCESS_KEY");
     public String gridURL = "@hub.lambdatest.com/wd/hub";
  
-     public String platform;
+     public String platformName;
      public String browserName;
      public String browserVersion;
-    public RemoteWebDriver driver = null;
+     public String selenium_version;
+     public RemoteWebDriver driver = null;
      public String status = "failed";
     
      @Parameterized.Parameters
      public static LinkedList<String[]> getEnvironments() throws Exception {
         LinkedList<String[]> env = new LinkedList<String[]>();
-        env.add(new String[]{"Windows 10", "chrome", "latest"});
-        env.add(new String[]{"Windows 10","firefox","latest"});
-        env.add(new String[]{"Windows 10","internet explorer","latest"});
+        env.add(new String[]{"Windows 11", "Chrome", "98.0", "4.0.0"});
+        env.add(new String[]{"Windows 11","Firefox","97.0", "4.0.0"});
+        env.add(new String[]{"Windows 11","Edge","97.0", "4.0.0"});
         return env;
     }
    
-    public JUnitConcurrentTodo(String platform, String browserName, String browserVersion) {
-        this.platform = platform;
+    public JUnitConcurrentTest(String platformName, String browserName, String browserVersion, String selenium_version) {
+        this.platformName = platformName;
         this.browserName = browserName;
         this.browserVersion = browserVersion;
+        this.selenium_version = selenium_version;
      }
     @Before
     public void setUp() throws Exception {
-       DesiredCapabilities capabilities = new DesiredCapabilities();
+
+        DesiredCapabilities capabilities = new DesiredCapabilities();
         capabilities.setCapability("browserName", browserName);
         capabilities.setCapability("version", browserVersion);
-        capabilities.setCapability("platform", platform); // If this cap isn't specified, it will just get the any available one
-        capabilities.setCapability("build", "JUnitParallelSample");
-        capabilities.setCapability("name", "JUnitParallelSampleTest");
+        capabilities.setCapability("build", "JUnit - Java [Parallel]");
+        capabilities.setCapability("name", "JUnit Parallel demo test");
+        capabilities.setCapability("platformName", platformName);
+        capabilities.setCapability("selenium_version", selenium_version);
         // capabilities.setCapability("network", true); // To enable network logs
         // capabilities.setCapability("visual", true); // To enable step by step screenshot
         // capabilities.setCapability("video", true); // To enable video recording
@@ -60,21 +65,34 @@ public class JUnitConcurrentTodo {
     @Test
     public void testParallel() throws Exception {
        try {
-              //Change it to production page
-            driver.get("https://lambdatest.github.io/sample-todo-app/");
-              //Let's mark done first two items in the list.
-              driver.findElement(By.name("li1")).click();
-            driver.findElement(By.name("li2")).click();
-             
-             // Let's add an item in the list.
-              driver.findElement(By.id("sampletodotext")).sendKeys("Yey, Let's add it to list");
-            driver.findElement(By.id("addbutton")).click();
-             
-              // Let's check that the item we added is added in the list.
-            String enteredText = driver.findElementByXPath("/html/body/div/div/div/ul/li[6]/span").getText();
-            if (enteredText.equals("Yey, Let's add it to list")) {
+        System.out.println("Loading Url");
+        driver.get("https://stage-demo.lambdatest.com/");
+
+            // Let's select the location
+            driver.findElement(By.id("headlessui-listbox-button-1")).click();
+            driver.findElement(By.id("Bali")).click();
+            System.out.println("Location is selected as Bali.");
+            // Let's select the number of guests
+            driver.findElement(By.id("headlessui-listbox-button-5")).click();
+            driver.findElement(By.id("2")).click();
+            System.out.println("Number of guests are selected.");
+            driver.findElement(By.xpath("//*[@id='search']")).click();
+            Thread.sleep(3000);
+            // Let's select one of the hotels for booking
+            driver.findElement(By.id("reserve-now")).click();
+            Thread.sleep(3000);
+            driver.findElement(By.id("proceed")).click();
+            Thread.sleep(3000);
+            System.out.println("Booking is confirmed.");
+            // Let's download the invoice
+            boolean exec = driver.findElement(By.id("invoice")).isDisplayed();
+            if(exec){
                 status = "passed";
+                driver.findElement(By.id("invoice")).click();
+                System.out.println("Tests are run successfully!");
             }
+            else
+                status="failed";
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
